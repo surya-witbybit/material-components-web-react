@@ -22,8 +22,8 @@
 
 import * as React from 'react';
 import * as classnames from 'classnames';
-// @ts-ignore no mdc .d.ts file
-import {MDCSelectFoundation, MDCSelectAdapter} from '@material/select/dist/mdc.select';
+import {MDCSelectFoundation} from '@material/select/foundation';
+import {MDCSelectAdapter} from '@material/select/adapter';
 import FloatingLabel from '@material/react-floating-label';
 import LineRipple from '@material/react-line-ripple';
 import NotchedOutline from '@material/react-notched-outline';
@@ -133,7 +133,7 @@ export default class Select extends React.Component<SelectProps, SelectState> {
   }
 
   get adapter(): MDCSelectAdapter {
-    const rootAdapterMethods = {
+    const nativeAdapter = {
       addClass: (className: string) => {
         const classList = new Set(this.state.classList);
         classList.add(className);
@@ -147,6 +147,9 @@ export default class Select extends React.Component<SelectProps, SelectState> {
       hasClass: (className: string) => this.classes.split(' ').includes(className),
       isRtl: () => this.props.isRtl,
       getValue: () => this.state.value,
+    };
+    const enhancedAdapter = {
+
     };
     const labelAdapter = {
       floatLabel: (labelIsFloated: boolean) => this.setState({labelIsFloated}),
@@ -163,7 +166,7 @@ export default class Select extends React.Component<SelectProps, SelectState> {
       hasOutline: () => !!this.props.outlined,
     };
     return {
-      ...rootAdapterMethods,
+      ...(this.props.enhanced ? enhancedAdapter : nativeAdapter),
       ...labelAdapter,
       ...lineRippleAdapter,
       ...notchedOutlineAdapter,
