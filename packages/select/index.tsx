@@ -29,12 +29,15 @@ import LineRipple from '@material/react-line-ripple';
 import NotchedOutline from '@material/react-notched-outline';
 import NativeControl from './NativeControl';
 
+const {cssClasses} = MDCSelectFoundation;
+
 type SelectOptionsType = (string | React.HTMLProps<HTMLOptionElement>)[];
 
 export interface SelectProps extends React.HTMLProps<HTMLSelectElement> {
   box?: boolean;
   className?: string;
   disabled?: boolean;
+  handleChange: (value: string) => void;
   floatingLabelClassName?: string;
   isRtl?: boolean;
   label?: string;
@@ -59,6 +62,7 @@ interface SelectState {
 
 export default class Select extends React.Component<SelectProps, SelectState> {
   foundation?: MDCSelectFoundation;
+  selectEl = React.createRef();
 
   constructor(props: SelectProps) {
     super(props);
@@ -133,32 +137,43 @@ export default class Select extends React.Component<SelectProps, SelectState> {
   }
 
   get adapter(): MDCSelectAdapter {
-    const nativeAdapter = {
-      addClass: (className: string) => {
-        const classList = new Set(this.state.classList);
-        classList.add(className);
-        this.setState({classList});
-      },
-      removeClass: (className: string) => {
-        const classList = new Set(this.state.classList);
-        classList.delete(className);
-        this.setState({classList});
-      },
+    const commonAdapter = {
+      addClass: this.addClass,
+      removeClass: this.removeClass,
       hasClass: (className: string) => this.classes.split(' ').includes(className),
-      isRtl: () => this.props.isRtl,
-      getValue: () => this.state.value,
-    };
-    const enhancedAdapter = {
+      setRippleCenter: this.setRippleCenter,
 
+      getValue: () => this.state.value,
+      setValue: (value: string) => this.setState({value}),
+      setDisabled: this.setDisabled,
     };
+    const nativeAdapter = {
+      openMenu: () => undefined,
+      closeMenu: () => undefined,
+      isMenuOpen: () => false,
+      setSelectedIndex: (index: number) => {
+        this.nativeControl_!.selectedIndex = index;
+      },
+      setValid: (isValid: boolean) => {
+        if (isValid) {
+          this.removeClass(cssClasses.INVALID);
+        } else {
+          this.addClass(cssClasses.INVALID);
+        }
+      },
+      checkValidity: () => this.nativeControl_!.checkValidity(),
+    };
+    // const enhancedAdapter = {
+
+    // };
     const labelAdapter = {
       floatLabel: (labelIsFloated: boolean) => this.setState({labelIsFloated}),
-      hasLabel: () => !!this.props.label,
       getLabelWidth: () => this.state.labelWidth,
     };
     const lineRippleAdapter = {
       activateBottomLine: () => this.setState({activeLineRipple: true}),
       deactivateBottomLine: () => this.setState({activeLineRipple: false}),
+      notifyChange: () => this.props.handleChange(), // TODO
     };
     const notchedOutlineAdapter = {
       notchOutline: () => this.setState({outlineIsNotched: true}),
@@ -166,7 +181,8 @@ export default class Select extends React.Component<SelectProps, SelectState> {
       hasOutline: () => !!this.props.outlined,
     };
     return {
-      ...(this.props.enhanced ? enhancedAdapter : nativeAdapter),
+      ...(nativeAdapter),
+      ...commonAdapter,
       ...labelAdapter,
       ...lineRippleAdapter,
       ...notchedOutlineAdapter,
@@ -175,13 +191,26 @@ export default class Select extends React.Component<SelectProps, SelectState> {
 
   setRippleCenter = (lineRippleCenter: number) => this.setState({lineRippleCenter});
   setDisabled = (disabled: boolean) => this.setState({disabled});
+  addClass = (className: string) => {
+    const classList = new Set(this.state.classList);
+    classList.add(className);
+    this.setState({classList});
+  };
+  removeClass = (className: string) => {
+    const classList = new Set(this.state.classList);
+    classList.delete(className);
+    this.setState({classList});
+  };
 
   /**
    * render methods
    */
   render() {
     return (
-      <div className={this.classes}>
+      <div
+        className={this.classes}
+        ref={this.selectEl}
+      >
         {this.renderSelect()}
         {this.renderLabel()}
         {this.props.outlined
