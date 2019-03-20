@@ -45,7 +45,6 @@ export interface MenuSurfaceProps extends React.HTMLProps<HTMLDivElement> {
   };
   onClose?: () => void;
   onOpen?: () => void;
-  onKeyDown?: (event: React.KeyboardEvent) => void;
   quickOpen?: boolean;
   open?: boolean;
   fixed?: boolean;
@@ -115,7 +114,7 @@ class MenuSurface extends React.Component<MenuSurfaceProps, MenuSurfaceState> {
     // here we force the menu to hoist, and require either
     // this.props.(x,y) or this.props.anchorElement.
     this.foundation.setIsHoisted(true);
-    this.foundation.setFixedPosition(fixed);
+    this.foundation.setFixedPosition(fixed!);
     if (coordinates) {
       this.setCoordinates();
     }
@@ -324,7 +323,7 @@ class MenuSurface extends React.Component<MenuSurfaceProps, MenuSurfaceState> {
     }
   };
 
-  handleKeydown = (evt: React.KeyboardEvent) => {
+  handleKeydown = (evt: React.KeyboardEvent<HTMLDivElement>) => {
     this.props.onKeyDown!(evt);
     this.foundation.handleKeydown(evt.nativeEvent);
   };
