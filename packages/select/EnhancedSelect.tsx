@@ -23,6 +23,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import {MDCSelectFoundation} from '@material/select/foundation';
+import Menu, {MenuList} from '@material/react-menu';
 
 type RefCallback<T> = (node: T | null) => void;
 
@@ -36,7 +37,7 @@ export interface NativeControlProps extends React.HTMLProps<HTMLSelectElement> {
   innerRef?: RefCallback<HTMLSelectElement> | React.RefObject<HTMLSelectElement>;
 }
 
-export default class NativeControl extends React.Component<
+export default class EnhancedSelect extends React.Component<
   NativeControlProps,
   {}
   > {
@@ -55,47 +56,14 @@ export default class NativeControl extends React.Component<
     if (this.props.disabled !== prevProps.disabled) {
       this.props.handleDisabled(this.props.disabled);
     }
+    if (this.props.value !== prevProps.value) {
+      
+    }
   }
 
   get classes() {
     return classnames('mdc-select__native-control', this.props.className);
   }
-
-  handleFocus = (evt: React.FocusEvent<HTMLSelectElement>) => {
-    const {foundation, onFocus} = this.props;
-    if (foundation.handleFocus) {
-      foundation.handleFocus();
-    }
-    onFocus && onFocus(evt);
-  };
-
-  handleBlur = (evt: React.FocusEvent<HTMLSelectElement>) => {
-    const {foundation, onBlur} = this.props;
-    if (foundation.handleFocus) {
-      foundation.handleBlur();
-    }
-    onBlur && onBlur(evt);
-  };
-
-  handleMouseDown = (evt: React.MouseEvent<HTMLSelectElement>) => {
-    const {onMouseDown} = this.props;
-    this.setRippleCenter(evt.clientX, evt.target as HTMLSelectElement);
-    onMouseDown && onMouseDown(evt);
-  };
-
-  handleTouchStart = (evt: React.TouchEvent<HTMLSelectElement>) => {
-    const {onTouchStart} = this.props;
-    const clientX = evt.touches[0] && evt.touches[0].clientX;
-    this.setRippleCenter(clientX, evt.target as HTMLSelectElement);
-    onTouchStart && onTouchStart(evt);
-  };
-
-  setRippleCenter = (xCoordinate: number, target: HTMLSelectElement) => {
-    if (target !== this.nativeControl.current) return;
-    const targetClientRect = target.getBoundingClientRect();
-    const normalizedX = xCoordinate - targetClientRect.left;
-    this.props.setRippleCenter(normalizedX);
-  };
 
   attachRef = (node: HTMLSelectElement | null) => {
     const {innerRef} = this.props;
@@ -136,19 +104,15 @@ export default class NativeControl extends React.Component<
     } = this.props;
 
     return (
-      <select
-        onFocus={this.handleFocus}
-        onBlur={this.handleBlur}
-        onMouseDown={this.handleMouseDown}
-        onTouchStart={this.handleTouchStart}
-        disabled={disabled}
-        value={value}
-        className={this.classes}
-        ref={this.attachRef}
-        {...otherProps}
-      >
-        {children}
-      </select>
+      <React.Fragment>
+        <input type='hidden' name='enhanced-select' />
+        <div className='mdc-select__selected-text'></div>
+        <Menu>
+          <MenuList>
+            {children}
+          </MenuList>
+        </Menu>
+      </React.Fragment>
     );
   }
 }
